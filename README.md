@@ -176,38 +176,55 @@ async def create_product(payload: CreateProductInput, db: AsyncSession = Depends
 
 ## Getting Started
 
-### 1. Local Development (Instant SQLite Zero-Config)
-The application automatically defaults to SQLite if no `DATABASE_URL` is set:
-```bash
-# Install dependencies
-uv sync
+### 1. Database Setup & Alembic Migrations
+The application uses **Alembic** to manage relational schema versions across SQLite (default for development/tests) and MySQL (production).
 
-# Run development server
+```bash
+# Run database migrations to latest schema revision
+uv run alembic upgrade head
+```
+
+### 2. Full-Stack Development with FluxFast Supervisor
+Run both the FastAPI backend and Next.js frontend under a single unified development server:
+
+```bash
+# Install frontend dependencies (if not already installed)
+(cd frontend && npm install)
+
+# Run full-stack supervisor (serves frontend and proxies backend)
+uv run fluxfast dev app.main:app --frontend frontend
+```
+Visit `http://localhost:3000` to interact with the full-stack store!
+
+### 3. Standalone Backend & Frontend
+Alternatively, run the services independently:
+
+```bash
+# Backend (FastAPI)
 uv run uvicorn app.main:app --reload --port 8000
-```
-Visit `http://localhost:8000/docs` to view Swagger UI or send FluxFast protocol headers:
-```bash
-curl -H "X-FluxFast: 1" -H "X-FluxFast-Protocol: 1" http://localhost:8000/dashboard
+
+# Frontend (Next.js App Router)
+cd frontend
+npm run dev
 ```
 
-### 2. Running with MySQL 8.4 via Docker Compose
+### 4. Running with MySQL 8.4 via Docker Compose
 To spin up MySQL and the application containers:
 ```bash
 docker compose up --build
 ```
-MySQL runs on port `33061` and automatically initializes `init_db.sql`. The API is accessible at `http://localhost:8000`.
+MySQL runs on port `33061`. The API is accessible at `http://localhost:8000`.
 
-### 3. Running Tests
+### 5. Running Tests
 Run the comprehensive test suite with `pytest`:
 ```bash
 uv run pytest -v
 ```
 
-### 4. Exporting Schema and Generating Frontend Types
+### 6. Full-Stack Type Generation
+Synchronize backend Pydantic models, resources, and routes directly into TypeScript:
 ```bash
-# Export the offline schema manifest
-uv run fluxfast schema app.main:app
-
-# Generate frontend TypeScript contracts and validators
-uv run fluxfast types app.main:app --frontend ../frontend
+uv run fluxfast types --frontend frontend app.main:app
 ```
+This generates `frontend/.fluxfast/types.generated.ts`, `routes.generated.ts`, `validators.generated.ts`, and `mutations.generated.ts`.
+
